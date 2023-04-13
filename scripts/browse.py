@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from config import Config
 from llm_utils import create_chat_completion
 from urllib.parse import urlparse, urljoin
+import tweepy
 
 cfg = Config()
 
@@ -20,12 +21,40 @@ def sanitize_url(url):
 
 # Function to make a request with a specified timeout and handle exceptions
 def make_request(url, timeout=10):
+    if url_is_twitter(url):
+        return make_request_twitter(url)
+
     try:
         response = requests.get(url, headers=cfg.user_agent_header, timeout=timeout)
         response.raise_for_status()
         return response
     except requests.exceptions.RequestException as e:
         return "Error: " + str(e)
+
+def url_is_twitter(url):
+    """Check if the URL is a Twitter URL"""
+    return "twitter.com" in url
+
+# Use tweepy to make a request to the Twitter API
+def make_request_twitter(url):
+    if cfg.tweepy_auth is None:
+        tweepy_auth = tweepy.OAuthHandler(cfg.twitter_consumer_key, cfg.twitter_consumer_secret)
+        tweepy_auth.set_access_token(cfg.twitter_access_token, cfg.twitter_access_token_secret)
+        cfg.set_tweepy_auth(tweepy_auth)
+
+    try:
+        api = tweepy.API(tweepy_auth)
+        status = api.get_status(url.split("/")[-1])
+        return format_twiter_text_as_requests_response(status.text)
+    except tweepy.TweepError as e:
+        return "Error: " + str(e)
+
+def format_twitter_text_as_requests_response(text):
+    """Format the text from a Twitter request as a requests response"""
+    class FakeResponse:
+        def __init__(self, text):
+            self.text = text
+    return FakeResponse(text)
 
 # Define and check for local file address prefixes
 def check_local_file_access(url):

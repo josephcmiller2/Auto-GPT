@@ -71,6 +71,13 @@ class Config(metaclass=Singleton):
         self.image_provider = os.getenv("IMAGE_PROVIDER")
         self.huggingface_api_token = os.getenv("HUGGINGFACE_API_TOKEN")
 
+        # Use Twitter API
+        self.twitter_consumer_key = os.getenv("TWITTER_CONSUMER_KEY")
+        self.twitter_consumer_secret = os.getenv("TWITTER_CONSUMER_SECRET")
+        self.twitter_access_token = os.getenv("TWITTER_ACCESS_TOKEN")
+        self.twitter_token_secret = os.getenv("TWITTER_TOKEN_SECRET")
+        self.tweepy_auth = None
+
         # User agent headers to use when browsing web
         # Some websites might just completely deny request with an error code if no user agent was found.
         self.user_agent_header = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}
@@ -144,3 +151,7 @@ class Config(metaclass=Singleton):
     def set_debug_mode(self, value: bool):
         """Set the debug mode value."""
         self.debug_mode = value
+
+    def set_tweepy_auth(self, value: tweepy.OAuthHandler):
+        """Set the tweepy auth value."""
+        self.tweepy_auth = value
